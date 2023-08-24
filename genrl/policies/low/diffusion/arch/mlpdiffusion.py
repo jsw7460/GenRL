@@ -7,14 +7,12 @@ from genrl.utils.jax_utils.general import create_mlp
 
 
 class MLPDiffusionNN(nn.Module):
-    x_dim: int
-    y_dim: int
     embed_dim: int
     hidden_dim: int
     output_dim: int
     dropout: float
-    max_step: int = 1024
     activation_fn: Callable
+    total_denoise_steps: int
 
     emb_x = None
     emb_y = None
@@ -38,7 +36,7 @@ class MLPDiffusionNN(nn.Module):
             dropout=self.dropout
         )
         self.emb_t = nn.Sequential([
-            nn.Embed(self.max_step),
+            nn.Embed(num_embeddings=self.total_denoise_steps, features=self.embed_dim),
             jnp.sin,
             nn.Dense(self.embed_dim)
         ])
@@ -67,29 +65,30 @@ class MLPDiffusionNN(nn.Module):
     def __call__(self, *args, **kwargs):
         return self.forward(*args, **kwargs)
 
-    def forward(self, x: jnp.ndarray, y: jnp.ndarray, t: jnp.ndarray):
+    def forward(self, x: jnp.ndarray, y: jnp.ndarray, t: jnp.ndarray, deterministic: bool = False) -> jnp.ndarray:
         """
         :param x: observation
         :param y: action
         :param t: denoising step
+        :param deterministic
         :return:
         """
-        emb_x = self.emb_x(x)
-        emb_y = self.emb_y(y)
+        emb_x = self.emb_x(x, deterministic=deterministic)
+        emb_y = self.emb_y(y, deterministic=deterministic)
         emb_t = self.emb_t(t)
 
         in1 = jnp.concatenate((emb_x, emb_y, emb_t), axis=-1)
-        out1 = self.out1(in1)
+        out1 = self.out1(in1, deterministic=deterministic)
 
         in2 = jnp.concatenate((out1 / 1.414, emb_y, emb_t), axis=-1)
-        out2 = self.out2(in2)
+        out2 = self.out2(in2, deterministic=deterministic)
         out2 = out2 + out1 / 1.414
 
         in3 = jnp.concatenate((out2 / 1.414, emb_y, emb_t), axis=-1)
-        out3 = self.out3(in3)
+        out3 = self.out3(in3, deterministic=deterministic)
         out3 = out3 + out2 / 1.414
 
-        in4 = jnp.concatenate((out3 / 1.414, y, t), axis=-1)
-        out4 = self.out4(in4)
+        in4 = jnp.concatenate((out3 / 1.414, y, emb_t), axis=-1)
+        out4 = self.out4(in4, deterministic=deterministic)
 
         return out4
