@@ -6,7 +6,8 @@ setup(
     packages=find_packages(),
     install_requires=[
         "numpy>=1.23.5",
-        "gymnasium>=0.29.0"
+        "gymnasium>=0.29.0",
+        "minari"
     ],
     author="Shin",
     author_email="jsw7460@gmail.com",
