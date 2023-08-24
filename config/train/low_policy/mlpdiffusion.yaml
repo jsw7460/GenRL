@@ -1,0 +1,22 @@
+_target_: genrl.policies.low.DiffusionLowPolicy
+seed: ${seed}
+cfg:
+  total_denoise_steps: 50
+  noise_dim: ${env.action_dim}
+
+  ddpm_schedule:
+    beta1: 1e-4
+    beta2: 0.02
+    total_denoise_steps: ${low_policy.cfg.total_denoise_steps}
+
+  nn_cfg:
+    embed_dim: 32
+    hidden_dim: 64
+    output_dim: 9
+    dropout: 0.0
+    activation_fn: gelu
+    total_denoise_steps: ${low_policy.cfg.total_denoise_steps}
+
+  lr: 1e-4
+  optimizer_class: adam
+  optimizer_kwargs: {}

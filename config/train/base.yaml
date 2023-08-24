@@ -1,0 +1,16 @@
+seed: 777
+
+defaults:
+  - env: kitchen
+  - wandb: base
+  - low_policy: mlpdiffusion
+  - algo: bc
+modules: ${algo.modules}
+
+save_prefix: /home/jsw7460/genrl/train/
+save_suffix: foo
+batch_size: 256
+subseq_len: 5
+max_iter: ${algo.max_iter}
+log_interval: 100
+save_interval: 10_000
