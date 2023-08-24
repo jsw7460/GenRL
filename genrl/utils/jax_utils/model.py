@@ -26,7 +26,7 @@ import optax
 # 	@classmethod
 # 	def create(
 # 		cls,
-# 		model_def: nn.Module,
+# 		model_def: nn_module.Module,
 # 		inputs: Sequence[jnp.ndarray],
 # 		tx: Optional[optax.GradientTransformation] = None,
 # 		**kwargs

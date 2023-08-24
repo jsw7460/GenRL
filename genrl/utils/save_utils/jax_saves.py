@@ -11,13 +11,13 @@ import zipfile
 from typing import Dict, Optional, Tuple, Union, Any
 
 import flax
-import gym
+import gymnasium as gym
 import jax
 import numpy as np
 import torch as th
 
-from comde.utils.jax_utils.type_aliases import TensorDict, Params
-from comde.utils.save_utils.common import open_path, data_to_json, json_to_data
+from genrl.utils.jax_utils.type_aliases import TensorDict, Params
+from genrl.utils.save_utils.common import open_path, data_to_json, json_to_data
 
 
 def get_system_info(print_info: bool = True) -> Tuple[Dict[str, str], str]:
@@ -33,7 +33,7 @@ def get_system_info(print_info: bool = True) -> Tuple[Dict[str, str], str]:
 		"Python": platform.python_version(),
 		"JAX": jax.__version__,
 		"Numpy": np.__version__,
-		"Gym": gym.__version__,
+		"Gymnasium": gym.__version__,
 	}
 	env_info_str = ""
 	for key, value in env_info.items():

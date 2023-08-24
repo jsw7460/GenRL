@@ -7,7 +7,7 @@ from jax import numpy as jnp
 from jax import random
 
 from genrl.utils.jax_utils.model import Model
-from genrl.utils.jax_utils.nn.mlp import MLP
+from genrl.utils.jax_utils.nn_module.mlp import MLP
 from genrl.utils.jax_utils.type_aliases import Dtype, Shape, PRNGKey, Array
 
 
@@ -57,7 +57,7 @@ def uniform(scale=1e-2, dtype: Dtype = jnp.float_) -> Callable:
       the range ``[0, scale)``.
 
     >>> import jax, jax.numpy as jnp
-    >>> initializer = jax.nn.initializers.uniform(10.0)
+    >>> initializer = jax.nn_module.initializers.uniform(10.0)
     >>> initializer(jax.random.PRNGKey(42), (2, 3), jnp.float32)  # doctest: +SKIP
     DeviceArray([[7.298188 , 8.691938 , 8.7230015],
                  [2.0818567, 1.8662417, 5.5022564]], dtype=float32)

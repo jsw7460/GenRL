@@ -75,8 +75,8 @@ class IJaxSavable(metaclass=ABCMeta):
 		different modules (see ``get_parameters``).
 
 		:param load_path_or_dict: Location of the saved data (path or file-like, see ``save``), or a nested
-			dictionary containing nn.Module parameters used by the policy. The dictionary maps
-			object names to a state-dictionary returned by ``torch.nn.Module.state_dict()``.
+			dictionary containing nn_module.Module parameters used by the policy. The dictionary maps
+			object names to a state-dictionary returned by ``torch.nn_module.Module.state_dict()``.
 		:param exact_match: If True, the given parameters should include parameters for each
 			module and each of their parameters, otherwise raises an Exception. If set to False, this
 			can be used to update only specific parameters.
