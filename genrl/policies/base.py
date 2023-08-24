@@ -1,6 +1,6 @@
 import collections.abc
 from types import MappingProxyType
-from typing import Dict
+from typing import Dict, Union
 
 import jax
 
@@ -23,7 +23,7 @@ class GenRLBaseModule:
         self.n_update = 0
 
     def _str_to_activation(self):
-        def str_to_activation(data: collections.abc.Mapping):
+        def str_to_activation(data: Union[collections.abc.Mapping, Dict]):
             for key, value in data.items():
                 if isinstance(value, collections.abc.Mapping):
                     str_to_activation(value)
