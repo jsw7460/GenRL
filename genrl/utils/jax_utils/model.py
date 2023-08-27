@@ -1,8 +1,7 @@
 """Policies: abstract base class and concrete implementations."""
-
 from typing import TypeVar
 
-from flax.struct import TNode
+import flax
 
 T = TypeVar('T')
 
@@ -193,3 +192,7 @@ class Model(struct.PyTreeNode):
             opt_state=opt_state,
             **kwargs,
         )
+
+    def load_dict(self, params: bytes) -> 'Model':
+        params = flax.serialization.from_bytes(self.params, params)
+        return self.replace(params=params)

@@ -1,17 +1,10 @@
 from abc import abstractmethod
 from typing import Dict, Protocol
 
-import numpy as np
-
 
 class Trainable(Protocol):
     @abstractmethod
     def build(self):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def predict(self, *args, **kwargs) -> np.ndarray:
-        """Forward of skill decoder model"""
         raise NotImplementedError()
 
     @abstractmethod

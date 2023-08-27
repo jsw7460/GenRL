@@ -1,2 +1,3 @@
-from .i_savable.i_savable import IJaxSavable
-from .i_trainable.i_trainable import ITrainable
+from genrl.utils.interfaces.savable import JaxSavable
+from genrl.utils.interfaces.trainable import Trainable
+from genrl.utils.interfaces.policy_predictor import PolicyPredictor

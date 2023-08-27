@@ -8,7 +8,7 @@ from genrl.utils.log_utils.logger import configure
 
 class Loggable:
     """Not an interface"""
-    WANDB_EXCLUDED = {"time/", "info/"}
+    WANDB_EXCLUDED = {"time/", "info/", "date"}
 
     def __init__(self, cfg):
         self.wandb_logger = wandb.init(

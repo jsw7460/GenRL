@@ -25,13 +25,13 @@ class MLPDiffusionNN(nn.Module):
     def setup(self) -> None:
         self.emb_x = create_mlp(
             output_dim=self.embed_dim,
-            net_arch=[self.embed_dim,],
+            net_arch=[64, self.embed_dim,],
             activation_fn=self.activation_fn,
             dropout=self.dropout
         )
         self.emb_y = create_mlp(
             output_dim=self.embed_dim,
-            net_arch=[self.embed_dim,],
+            net_arch=[64, self.embed_dim,],
             activation_fn=self.activation_fn,
             dropout=self.dropout
         )
@@ -43,22 +43,22 @@ class MLPDiffusionNN(nn.Module):
 
         self.out1 = create_mlp(
             output_dim=self.hidden_dim,
-            net_arch=[self.hidden_dim,],
+            net_arch=[64, self.hidden_dim,],
             activation_fn=self.activation_fn
         )
         self.out2 = create_mlp(
             output_dim=self.hidden_dim,
-            net_arch=[self.hidden_dim,],
+            net_arch=[64, self.hidden_dim,],
             activation_fn=self.activation_fn
         )
         self.out3 = create_mlp(
             output_dim=self.hidden_dim,
-            net_arch=[self.hidden_dim,],
+            net_arch=[64, self.hidden_dim,],
             activation_fn=self.activation_fn
         )
         self.out4 = create_mlp(
             output_dim=self.output_dim,
-            net_arch=[self.hidden_dim,],
+            net_arch=[64, self.hidden_dim,],
             activation_fn=self.activation_fn
         )
 
