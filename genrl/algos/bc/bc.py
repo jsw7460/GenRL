@@ -4,6 +4,7 @@ from genrl.algos.base import BaseTrainer
 from genrl.policies.low.base import BaseLowPolicy
 from genrl.utils.common.type_aliases import GymEnv
 from genrl.rl.buffers.genrl_buffer import GenRLDataset
+from genrl.rl.buffers.type_aliases import GenRLBufferSample
 
 
 class BC(BaseTrainer):
@@ -12,7 +13,7 @@ class BC(BaseTrainer):
         """
         :param cfg:
         :param env:
-        :param policy:
+        :param low_policy:
         This class is not responsible for filling the replay buffer.
 
         """
@@ -39,15 +40,16 @@ class BC(BaseTrainer):
         assert len(dataset) > 0, "Dataset should have more than one trajectory"
         self._eval_dataset = dataset
 
-    def _prepare_run(self):
+    def _prepare_run(self) -> None:
         self.required_total_update = self.max_iter
 
-    def learn(self):
-        for update_step in range(self.required_total_update):
-            replay_data = self.train_dataset.sample_subtrajectories(
-                n_episodes=self.batch_size,
-                subseq_len=self.subseq_len
-            )
-            info = self.low_policy.update(replay_data)
+    def _sample_train_batch(self) -> GenRLBufferSample:
+        return self.train_dataset.sample_subtrajectories(
+            self.batch_size,
+            self.subseq_len,
+            allow_replace=True
+        )
 
-            # print(info[])
+    def _update_model(self, replay_data: GenRLBufferSample) -> Dict:
+        info = self.low_policy.update(replay_data)
+        return info
