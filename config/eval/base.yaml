@@ -1,0 +1,11 @@
+defaults:
+  - env: kitchen
+
+seed: 0
+n_eval: 3
+pretrained_prefix: /home/jsw7460/mnt/genrl_save/train/
+date: 2023-08-27  # yyyy-mm-dd. Date for trained model
+pretrained_suffix: ???
+step: 10000
+
+pretrained_path: ${pretrained_prefix}/${date}/cfg/cfg_${pretrained_suffix}

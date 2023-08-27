@@ -1,6 +1,10 @@
 _target_: genrl.policies.low.DiffusionLowPolicy
 seed: ${seed}
 cfg:
+
+  observation_dim: ${env.observation_dim}
+  action_dim: ${env.action_dim}
+
   total_denoise_steps: 50
   noise_dim: ${env.action_dim}
 

@@ -25,7 +25,6 @@ train_dt, eval_dt = GenRLDataset.split_dataset(buffer, sizes=[8, 1])
 @hydra.main(version_base=None, config_path="config/train", config_name="base")
 def program(cfg: DictConfig) -> None:
     cfg = OmegaConf.to_container(cfg, resolve=True)  # type: Dict
-
     env = buffer.recover_environment()
 
     modules_dict = {}
@@ -38,7 +37,7 @@ def program(cfg: DictConfig) -> None:
     algo.train_dataset = train_dt
     algo.eval_dataset = eval_dt
 
-    algo.learn()
+    algo.train()
 
 
 if __name__ == "__main__":

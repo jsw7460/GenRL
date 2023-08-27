@@ -2,4 +2,4 @@ mode: bc
 cls: genrl.algos.BC
 modules:
   - low_policy
-max_iter: 1_000_000
+max_iter: 10_000_000
