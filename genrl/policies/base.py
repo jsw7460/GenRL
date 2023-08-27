@@ -1,20 +1,23 @@
 import collections.abc
+import random
 from types import MappingProxyType
 from typing import Dict, Union
 
 import jax
+import numpy as np
 
-from genrl.utils.common.type_aliases import GymEnv
 from genrl.utils.jax_utils.general import str_to_flax_activation
 
 
 class GenRLBaseModule:
-    def __init__(self, seed: int, cfg: Dict, env: GymEnv, init_build_model: bool):
+    def __init__(self, seed: int, cfg: Dict, init_build_model: bool):
+        random.seed(seed)
+        np.random.seed(seed)
+
         self.seed = seed
         self.rng = jax.random.PRNGKey(seed)
 
         self.cfg = cfg
-        self.env = env
 
         if init_build_model:
             self._str_to_activation()
