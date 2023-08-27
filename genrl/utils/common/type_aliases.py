@@ -1,5 +1,7 @@
-from typing import Any, Callable, Dict, List, NamedTuple, Optional, Protocol, SupportsFloat, Tuple, Union
-import gymnasium as gym
+from typing import Optional, Tuple
 
+import gymnasium as gym
+import numpy as np
 
 GymEnv = gym.Env
+PolicyOutput = Tuple[np.ndarray, Optional[Tuple[np.ndarray, ...]]]
