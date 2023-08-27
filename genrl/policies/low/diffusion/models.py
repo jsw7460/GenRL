@@ -1,23 +1,24 @@
 from functools import partial
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union, Optional
 
 import jax
+import numpy as np
 from jax import numpy as jnp
 
-from genrl.policies.low.diffusion.ddpm_schedule import ddpm_linear_schedule
 from genrl.policies.low.base import BaseLowPolicy
 from genrl.policies.low.diffusion.arch.mlpdiffusion import MLPDiffusionNN  # Todo: Change to transformer
+from genrl.policies.low.diffusion.ddpm_schedule import ddpm_linear_schedule
 from genrl.rl.buffers.type_aliases import GenRLBufferSample
-from genrl.utils.common.type_aliases import GymEnv
 from genrl.utils.jax_utils.general import get_basic_rngs
 from genrl.utils.jax_utils.model import Model
 from genrl.utils.jax_utils.type_aliases import PRNGKey, Params
+from genrl.utils.common.type_aliases import PolicyOutput
 
 
 class DiffusionLowPolicy(BaseLowPolicy):
 
-    def __init__(self, seed: int, env: GymEnv, cfg: Dict, init_build_model: bool = True):
-        super(DiffusionLowPolicy, self).__init__(seed=seed, env=env, cfg=cfg, init_build_model=init_build_model)
+    def __init__(self, seed: int, cfg: Dict, init_build_model: bool = True):
+        super(DiffusionLowPolicy, self).__init__(seed=seed, cfg=cfg, init_build_model=init_build_model)
 
         self.total_denoise_steps = cfg["total_denoise_steps"]
         self.noise_dim = cfg["noise_dim"]
@@ -28,8 +29,8 @@ class DiffusionLowPolicy(BaseLowPolicy):
         nn_class = MLPDiffusionNN
 
         nn = nn_class(**self.cfg["nn_cfg"])
-        obs = jnp.array([self.env.observation_space["observation"].sample()])
-        act = jnp.array([self.env.action_space.sample()])
+        obs = jnp.zeros((1, self.observation_dim))
+        act = jnp.zeros((1, self.action_dim))
         time = jnp.array([0], dtype="i4")
 
         tx = self.optimizer_class(learning_rate=self.cfg["lr"], **self.cfg["optimizer_kwargs"])
@@ -64,7 +65,7 @@ class DiffusionLowPolicy(BaseLowPolicy):
 
         return noise_pred
 
-    def update(self, replay_data: GenRLBufferSample) -> Dict:
+    def _update(self, replay_data: GenRLBufferSample) -> Dict:
         self.rng, _ = jax.random.split(self.rng)
 
         new_policy, info = self.update_diffusion(
@@ -87,8 +88,8 @@ class DiffusionLowPolicy(BaseLowPolicy):
         rng: PRNGKey,
         policy: Model,
         observations: jnp.ndarray,  # [b, l, d]
-        actions: jnp.ndarray,   # [b, l, d]
-        masks: jnp.ndarray, # [b, l]
+        actions: jnp.ndarray,  # [b, l, d]
+        masks: jnp.ndarray,  # [b, l]
 
         ddpm_schedule: Dict,
         noise_dim: int,
@@ -119,8 +120,9 @@ class DiffusionLowPolicy(BaseLowPolicy):
                 t=jnp.repeat(_ts[..., jnp.newaxis], repeats=subseq_len, axis=-1)
             )
 
-            mse_loss = jnp.mean(jnp.sum((noise_pred - noise) ** 2, axis=-1) * masks)
+            mse_loss = jnp.mean(jnp.mean((noise_pred - noise) ** 2, axis=-1) * masks)
 
+            # If key startswith __ (double underbar), then it is not printed.
             _info = {
                 "mse_loss": mse_loss,
                 "__noise_pred": noise_pred
@@ -133,19 +135,25 @@ class DiffusionLowPolicy(BaseLowPolicy):
 
         return new_policy, info
 
-    def _predict(self, observations: jnp.ndarray, deterministic: bool = True) -> Tuple[jnp.ndarray, Dict]:
-        broadcast_shape = observations.shape[: -1]
+    def _predict(
+        self,
+        observation: Union[np.ndarray, Dict[str, np.ndarray]],
+        state: Optional[Tuple[np.ndarray, ...]] = None,
+        episode_start: Optional[np.ndarray] = None,
+        deterministic: bool = False
+    ) -> PolicyOutput:
+        broadcast_shape = observation.shape[: -1]
 
         # sample initial noise, y_T ~ Normal(0, 1)
-        y_t = jax.random.normal(self.rng, shape=(*observations.shape[: -1], self.noise_dim))
+        y_t = jax.random.normal(self.rng, shape=(*observation.shape[: -1], self.noise_dim))
         # denoising chain
         for t in range(self.total_denoise_steps, 0, -1):
             denoise_steps = t + jnp.zeros(shape=broadcast_shape, dtype="i4")
-            z = jax.random.normal(self.rng, shape=(*observations.shape[: -1], self.noise_dim)) if t > 0 else 0
+            z = jax.random.normal(self.rng, shape=(*observation.shape[: -1], self.noise_dim)) if t > 0 else 0
 
             eps = DiffusionLowPolicy.policy_forward(
                 policy=self.policy_nn,
-                observations=observations,
+                observations=observation,
                 y_t=y_t,
                 denoise_step=denoise_steps,
                 deterministic=True
@@ -158,4 +166,4 @@ class DiffusionLowPolicy(BaseLowPolicy):
             y_t = (oneover_sqrta[t] * (y_t - ma_over_sqrtmab_inv[t] * eps)) + (sqrt_beta_t[t] * z)
 
         self.rng, _ = jax.random.split(self.rng)
-        return y_t
+        return y_t, None
