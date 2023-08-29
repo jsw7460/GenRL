@@ -1,15 +1,17 @@
-from typing import Dict
+from typing import Dict, Any
+
+import numpy as np
 
 from genrl.algos.base import BaseTrainer
-from genrl.policies.low.base import BaseLowPolicy
-from genrl.utils.common.type_aliases import GymEnv
+from genrl.policies.base import BasePolicy
 from genrl.rl.buffers.genrl_buffer import GenRLDataset
 from genrl.rl.buffers.type_aliases import GenRLBufferSample
+from genrl.utils.common.type_aliases import GymEnv, GenRLPolicyInput
 
 
 class BC(BaseTrainer):
 
-    def __init__(self, cfg: Dict, env: GymEnv, low_policy: BaseLowPolicy):
+    def __init__(self, cfg: Dict, env: GymEnv, low_policy: BasePolicy):
         """
         :param cfg:
         :param env:
@@ -53,3 +55,28 @@ class BC(BaseTrainer):
     def _update_model(self, replay_data: GenRLBufferSample) -> Dict:
         info = self.low_policy.update(replay_data)
         return info
+
+    def _evaluate_model(self) -> Dict[str, Any]:
+        subtraj = self.eval_dataset.sample_subtrajectories(len(self.eval_dataset), 1)
+
+        policy_input = GenRLPolicyInput(
+            observations=subtraj.observations,
+            actions=subtraj.actions,
+            masks=subtraj.masks,
+            rewards=subtraj.rewards,
+            terminations=subtraj.terminations
+        )
+
+        policy_output = self.low_policy.predict(policy_input)
+
+        pred_action = policy_output.pred_action
+        policy_info = policy_output.info
+
+        targ_action = subtraj.actions
+
+        mse_loss = np.mean((pred_action - targ_action) ** 2, axis=-1) * subtraj.masks
+        mse_loss = np.sum(mse_loss) / np.sum(subtraj.masks)
+
+        policy_info.update({"mse_loss": mse_loss})
+
+        return policy_info

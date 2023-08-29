@@ -1,38 +1,60 @@
-import collections.abc
-import random
-from types import MappingProxyType
-from typing import Dict, Union
+from typing import Dict, List
 
 import jax
-import numpy as np
 
-from genrl.utils.jax_utils.general import str_to_flax_activation
+from genrl.utils.common.base import GenRLBaseModule
+from genrl.utils.common.base import PolicyNNWrapper
+from genrl.utils.common.type_aliases import GenRLPolicyInput, GenRLPolicyOutput
+from genrl.utils.interfaces import JaxSavable, Trainable
+from genrl.utils.jax_utils.model import Model
+from genrl.utils.jax_utils.type_aliases import Params
 
 
-class GenRLBaseModule:
+class BasePolicy(GenRLBaseModule, JaxSavable, Trainable):
+    PARAM_NAMES = ["policy_nn"]
+
     def __init__(self, seed: int, cfg: Dict, init_build_model: bool):
-        random.seed(seed)
-        np.random.seed(seed)
+        super(BasePolicy, self).__init__(seed=seed, cfg=cfg, init_build_model=init_build_model)
 
-        self.seed = seed
-        self.rng = jax.random.PRNGKey(seed)
+        self.observation_dim = cfg["observation_dim"]
+        self.action_dim = cfg["action_dim"]
 
-        self.cfg = cfg
+        self.optimizer_class = None
+        self.policy = None  # type: PolicyNNWrapper
+        self.policy_nn: Model
 
         if init_build_model:
-            self._str_to_activation()
+            self.build()
 
-        self.cfg = MappingProxyType(cfg)  # Freeze
-        self.n_update = 0
+    def build(self):
+        pass
 
-    def _str_to_activation(self):
-        def str_to_activation(data: Union[collections.abc.Mapping, Dict]):
-            for key, value in data.items():
-                if isinstance(value, collections.abc.Mapping):
-                    str_to_activation(value)
-                else:
-                    if key == "activation_fn":
-                        activation = str_to_flax_activation(value)
-                        data[key] = activation
+    def _excluded_save_params(self) -> List:
+        return BasePolicy.PARAM_NAMES
 
-        str_to_activation(data=self.cfg)
+    def _get_save_params(self) -> Dict[str, Params]:
+        params_dict = {}
+        for str_component in BasePolicy.PARAM_NAMES:
+            component = getattr(self, str_component)
+            params_dict[str_component] = component.params
+        return params_dict
+
+    def _get_load_params(self) -> List[str]:
+        return BasePolicy.PARAM_NAMES
+
+    def predict(self, x: GenRLPolicyInput) -> GenRLPolicyOutput:
+        return self._predict(x)
+
+    def _predict(self, *args, **kwargs) -> GenRLPolicyOutput:
+        raise NotImplementedError()
+
+    def update(self, *args, **kwargs) -> Dict:
+        self.n_update += 1
+        self.rng, _ = jax.random.split(self.rng)
+        return self._update(*args, **kwargs)
+
+    def _update(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def evaluate(self, *args, **kwargs) -> Dict:
+        pass
