@@ -1,0 +1,19 @@
+_target_: genrl.policies.low.diffusion.policy.TransformerDiffusionNN
+
+gpt2_config:
+  vocab_size: 1
+  n_positions: 1024
+  n_layer: 3
+  n_head: 8
+  activation_function: relu
+  resid_pdrop: 0.1
+  embd_pdrop: 0.1
+  attn_pdrop: 0.1
+  layer_norm_epsilon: 0
+
+embed_dim: 256
+hidden_dim: 256
+output_dim: ${env.action_dim}
+dropout: ${dropout}
+activation_fn: relu
+total_denoise_steps: ${low_policy.kwargs.cfg.total_denoise_steps}

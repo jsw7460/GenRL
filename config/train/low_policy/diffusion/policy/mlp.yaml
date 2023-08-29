@@ -1,0 +1,18 @@
+target: genrl.policies.low.diffusion.nn.MLPDiffusion
+
+cfg:
+  observation_dim: ${env.observation_dim}
+  action_dim: ${env.action_dim}
+  subseq_len: ${subseq_len}
+
+  policy:
+    embed_dim: 64
+    hidden_dim: 32
+    output_dim: ${env.action_dim}
+    dropout: ${dropout}
+    activation_fn: relu
+    total_denoise_steps: ${low_policy.kwargs.cfg.total_denoise_steps}
+
+  optimizer_class: adam
+  lr: 1e-4
+  optimizer_kwargs: {}
