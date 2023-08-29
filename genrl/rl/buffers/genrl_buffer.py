@@ -25,6 +25,37 @@ class GenRLDataset(MinariDataset):
         self._generator = np.random.default_rng(seed)
         self.postprocess_fn = postprocess_fn
 
+    def filter_episodes(
+        self, condition: Callable[[EpisodeData], bool]
+    ) -> GenRLDataset:
+        """Filter the dataset episodes with a condition.
+
+        The condition must be a callable which takes an `EpisodeData` instance and retutrns a bool.
+        The callable must return a `bool` True if the condition is met and False otherwise.
+        i.e filtering for episodes that terminate:
+
+        ```
+        dataset.filter(condition=lambda x: x['terminations'][-1] )
+        ```
+
+        Args:
+            condition (Callable[[EpisodeData], bool]): callable that accepts any type(For our current backend, an h5py episode group) and returns True if certain condition is met.
+        """
+
+        def dict_to_episode_data_condition(episode: dict) -> bool:
+            return condition(EpisodeData(**episode))
+
+        mask = self._data.apply(
+            dict_to_episode_data_condition, episode_indices=self._episode_indices
+        )
+        assert self._episode_indices is not None
+        return GenRLDataset(
+            self._data,
+            seed=self.seed,
+            episode_indices=self._episode_indices[mask],
+            postprocess_fn=self.postprocess_fn
+        )
+
     @classmethod
     def split_dataset(cls, buffer: GenRLDataset, sizes: List[int]):
         """Split a MinariDataset in multiple datasets.
