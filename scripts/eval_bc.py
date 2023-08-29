@@ -1,5 +1,6 @@
 import sys
-from typing import TypeVar, Any, Dict, Tuple, SupportsFloat
+from functools import partial
+from typing import TypeVar, Any, Tuple, SupportsFloat, Dict
 
 import numpy as np
 
@@ -30,26 +31,19 @@ class FrankaKitchenWrapper(gym.Wrapper):
         obs = obs["observation"]
         return obs, info
 
-    def step(
-        self, action: WrapperActType
-    ) -> tuple[WrapperObsType, SupportsFloat, bool, bool, dict[str, Any]]:
-        obs, rew, terminated, trunc, info, done = super(FrankaKitchenWrapper, self).step(action=action)
+    def step(self, action: WrapperActType) -> Tuple[WrapperObsType, SupportsFloat, bool, bool, Dict[str, Any]]:
+        obs, *_ = super(FrankaKitchenWrapper, self).step(action=action)
+        obs = obs["observation"]
+        return obs, *_
 
-        print(obs)
-        exit()
 
 @hydra.main(version_base=None, config_path="../config/eval", config_name="base")
 def program(cfg: DictConfig) -> None:
-    env = gym.make("FrankaKitchen-v1")
-
+    env = gym.make("FrankaKitchen-v1", max_episode_steps=30)
     env = FrankaKitchenWrapper(env)
 
-    # obs, info = env.reset()
-    # print(obs.shape)
-    # exit()
-
-    eval_executor = EvaluationExecutor(cfg, env=env)
-    eval_fn = evaluate_policy
+    eval_executor = EvaluationExecutor(cfg, envs=[env])
+    eval_fn = partial(evaluate_policy, n_eval_episodes=1)
     eval_executor.eval_execute(eval_fn=eval_fn)
 
 
