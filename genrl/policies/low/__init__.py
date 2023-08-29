@@ -1,4 +1,4 @@
-from genrl.policies.low.diffusion.models import DiffusionLowPolicy
+from genrl.policies.low.diffusion.agent import DiffusionLowPolicy
 
 
 __all__ = [

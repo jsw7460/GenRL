@@ -1,14 +1,14 @@
 import pickle
+import random
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Any
+
+import numpy as np
 
 from genrl.rl.buffers.type_aliases import GenRLBufferSample
 from genrl.utils.common.type_aliases import GymEnv
 from genrl.utils.superclasses.loggable import Loggable
-
-import random
-import numpy as np
 
 
 class BaseTrainer(Loggable):
@@ -36,6 +36,7 @@ class BaseTrainer(Loggable):
         self.max_iter = cfg["max_iter"]
         self.log_interval = cfg["log_interval"]
         self.save_interval = cfg["save_interval"]
+        self.eval_interval = cfg["eval_interval"]
         self.required_total_update = None
 
         self.prepare_run()
@@ -69,6 +70,9 @@ class BaseTrainer(Loggable):
     def _update_model(self, data: GenRLBufferSample) -> Dict:
         raise NotImplementedError()
 
+    def _evaluate_model(self, *args, **kwargs) -> Dict[str, Any]:
+        raise NotImplementedError()
+
     def prepare_run(self):
         self._prepare_run()
         prefix = self.cfg["save_prefix"]
@@ -94,6 +98,7 @@ class BaseTrainer(Loggable):
         # Dump configure file
         with open(str(cfg_prefix / Path(f"cfg_{suffix}")), "wb") as f:
             pickle.dump({**self.cfg, "env_recover": self.env}, f)
+
         self.start = datetime.now()
 
     def train(self):
@@ -109,6 +114,9 @@ class BaseTrainer(Loggable):
             if (self.n_update % self.save_interval) == 0:
                 self.save()
 
+            if (self.n_update % self.eval_interval) == 0:
+                self.evaluate()
+
     def update_model(self, data: GenRLBufferSample) -> Dict:
         return self._update_model(data)
 
@@ -117,5 +125,6 @@ class BaseTrainer(Loggable):
             cur_step = str(self.n_update)
             getattr(self, key).save(f"{save_path}_{cur_step}")
 
-    def load(self, *args, **kwargs):
-        raise NotImplementedError()
+    def evaluate(self, *args, **kwargs) -> None:
+        eval_dict = self._evaluate_model(*args, **kwargs)
+        self.record_from_dicts(eval_dict, mode="eval")

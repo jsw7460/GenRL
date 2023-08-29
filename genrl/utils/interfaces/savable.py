@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 from typing import Dict, List, Union, Protocol
 
 from genrl.utils.jax_utils.type_aliases import Params
@@ -63,6 +63,7 @@ class JaxSavable(Protocol):
 
         # put state_dicts back in place
         model.set_parameters(params, exact_match=True)
+
         return model
 
     def set_parameters(
