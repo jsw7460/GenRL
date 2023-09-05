@@ -38,10 +38,6 @@ class GenRLEnvOutput:
     truncations: ndArray  # [b, l]
     info: Union[List[Dict], Deque[Dict], List[List[Dict]]]
 
-    # Maybe None
-    sem_skills: Optional[ndArray] = None
-    sem_skills_done: Optional[ndArray] = None
-
     @staticmethod
     def batch_stack(batch_output: List["GenRLEnvOutput"]) -> "GenRLEnvOutput":
         subseq_len = batch_output[0].subseq_len
@@ -55,13 +51,6 @@ class GenRLEnvOutput:
         truncations = np.stack([o.truncations for o in batch_output], axis=0)
         info = [o.info for o in batch_output]
 
-        if batch_output[0].sem_skills is not None:
-            sem_skills = np.stack([o.sem_skills for o in batch_output])
-            sem_skills_done = np.stack([o.sem_skills_done for o in batch_output])
-        else:
-            sem_skills = None
-            sem_skills_done = None
-
         return GenRLEnvOutput(
             subseq_len=subseq_len,
             observations=observations,
@@ -72,8 +61,6 @@ class GenRLEnvOutput:
             terminations=terminations,
             truncations=truncations,
             info=info,
-            sem_skills=sem_skills,
-            sem_skills_done=sem_skills_done
         )
 
 
@@ -96,9 +83,6 @@ class GenRLPolicyInput:
     terminations: ndArray  # [b, l]
     timesteps: ndArray
 
-    sem_skills: Optional[ndArray] = None
-    sem_skills_done: Optional[ndArray] = None
-
     @staticmethod
     def from_env_output(x: GenRLEnvOutput) -> "GenRLPolicyInput":
         return GenRLPolicyInput(
@@ -108,8 +92,6 @@ class GenRLPolicyInput:
             rewards=x.rewards,
             timesteps=x.timesteps,
             terminations=x.terminations,
-            sem_skills=x.sem_skills,
-            sem_skills_done=x.sem_skills_done
         )
 
 

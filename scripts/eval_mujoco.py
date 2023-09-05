@@ -22,7 +22,7 @@ WrapperActType = TypeVar("WrapperActType")
 def program(cfg: DictConfig) -> None:
     env1 = GenRLHistoryEnv(gym.make("HalfCheetah-v4"))
 
-    eval_executor = EvaluationExecutor(cfg, envs=[env1])
+    eval_executor = EvaluationExecutor(cfg, envs=(env1,))
     eval_fn = partial(evaluate_policy, n_eval_episodes=1)
     eval_executor.eval_execute(eval_fn=eval_fn)
 

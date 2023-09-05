@@ -1,4 +1,4 @@
-target: genrl.policies.skill.DiffusionSkillPolicy
+target: vlg.policies.skill.DiffusionSkillPolicy
 
 defaults:
     - diffusion/policy: mlp

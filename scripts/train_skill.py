@@ -8,7 +8,7 @@ import hydra
 from hydra.utils import get_class
 from omegaconf import DictConfig, OmegaConf
 
-from genrl.rl.buffers.genrl_buffer import GenRLDataset
+from vlg.rl.buffers.vlg_buffer import VLGDataset
 from genrl.algos import BC
 
 
@@ -19,11 +19,12 @@ def preprocess_obs(obs):
 
 # data = h5py.File("/home/jsw7460/.minari/datasets/kitchen-mixed-v1/data/main_data.hdf5")
 
-buffer = GenRLDataset(
+buffer = VLGDataset(
     "/home/jsw7460/.minari/datasets/kitchen-mixed-v1/data/main_data.hdf5",
     # "/home/jsw7460/Kitchen-v0",
     777,
     preprocess_obs=preprocess_obs,
+    skill_based=True
 )
 
 buffer = buffer.filter_episodes(lambda ep: ep.total_timesteps > 30)

@@ -1,4 +1,4 @@
-target: genrl.policies.skill.diffusion.nn.MLPSkillDiffusion
+target: vlg.policies.skill.diffusion.nn.MLPSkillDiffusion
 
 cfg:
   observation_dim: ${env.observation_dim}

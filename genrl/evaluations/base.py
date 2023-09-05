@@ -16,7 +16,6 @@ from genrl.utils.interfaces import JaxSavable
 class EvaluationExecutor:
     save_filename_base = "{env}_r{reward}"
     max_env_name = 15
-    predictable = ["skill", "low_policy"]
 
     def __init__(self, cfg: Union[Dict, DictConfig], envs: Tuple[GenRLHistoryEnv, ...]):
         random.seed(cfg.seed)

@@ -24,9 +24,6 @@ class GenRLEpisodeData:
     terminations: ndArray
     truncations: ndArray
 
-    sem_skills: Optional[ndArray] = None
-    sem_skills_done: Optional[ndArray] = None
-
 
 @dataclass(frozen=True)
 class GenRLBufferSample:
@@ -50,6 +47,3 @@ class GenRLBufferSample:
     rewards: ndArray  # [b, l]
     terminations: ndArray  # [b, l]
     masks: ndArray  # [b, l]  # Whether each component is zero padded or not
-
-    sem_skills: Optional[ndArray] = None
-    sem_skills_done: Optional[ndArray] = None

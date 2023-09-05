@@ -5,7 +5,6 @@ import gymnasium as gym
 import numpy as np
 
 from genrl.utils.common.type_aliases import GenRLEnvOutput, GymEnv
-from genrl.rl.envs.utils.skill import GenRLSkillEnv
 
 WrapperObsType = TypeVar("WrapperObsType")
 WrapperActType = TypeVar("WrapperActType")
@@ -16,7 +15,7 @@ class GenRLHistoryEnv(gym.Wrapper):
         Environment wrapper for supporting sequential model inference.
     """
 
-    def __init__(self, env: Union[GenRLSkillEnv, GymEnv]):
+    def __init__(self, env: Union[GymEnv]):
         super(GenRLHistoryEnv, self).__init__(env=env)
         self.env = env
         self.num_stack_frames = None    # Set when setup() method is called.
@@ -25,7 +24,6 @@ class GenRLHistoryEnv(gym.Wrapper):
         self.goal_stack: Optional[Deque] = None
         self.obs_stack: Optional[Deque] = None
         self.act_stack: Optional[Deque] = None
-        self.skill_stack: Optional[Deque] = None
         self.rew_stack: Optional[Deque] = None
         self.termination_stack: Optional[Deque] = None
         self.truncation_stack: Optional[Deque] = None
@@ -39,7 +37,6 @@ class GenRLHistoryEnv(gym.Wrapper):
             self.goal_stack = collections.deque([], maxlen=self.num_stack_frames)
         self.obs_stack = collections.deque([], maxlen=self.num_stack_frames)
         self.act_stack = collections.deque([], maxlen=self.num_stack_frames)
-        self.skill_stack = collections.deque([], maxlen=self.num_stack_frames)
         self.rew_stack = collections.deque([], maxlen=self.num_stack_frames)
         self.termination_stack = collections.deque([], maxlen=self.num_stack_frames)
         self.truncation_stack = collections.deque([], maxlen=self.num_stack_frames)
@@ -82,7 +79,6 @@ class GenRLHistoryEnv(gym.Wrapper):
                 self.goal_stack.append(self.env.goal)  # pytype: disable=attribute-error
             self.obs_stack.append(np.zeros_like(obs))
             self.act_stack.append(np.zeros_like(self.env.action_space.sample()))
-            self.skill_stack.append(np.zeros(1, ))
             self.rew_stack.append(0)
             self.termination_stack.append(0)
             self.truncation_stack.append(0)
@@ -130,7 +126,6 @@ class GenRLHistoryEnv(gym.Wrapper):
             subseq_len=self.num_stack_frames,
             observations=np.stack(self.obs_stack, axis=0),
             actions=np.stack(self.act_stack, axis=0),
-            sem_skills=np.stack(self.skill_stack, axis=0),
             masks=np.concatenate((np.zeros(self.num_stack_frames - n_mask), np.ones(n_mask))),
             timesteps=timesteps,
             rewards=np.stack(self.rew_stack, axis=0),
@@ -141,7 +136,7 @@ class GenRLHistoryEnv(gym.Wrapper):
 
         return env_output
 
-    def reset(self, skill: np.ndarray = None, *args, **kwargs) -> GenRLEnvOutput:
+    def reset(self, *args, **kwargs) -> GenRLEnvOutput:
         """Resets env and returns new observation."""
         obs, info = self.env.reset()
         # Create a N-1 "done" past frames.
@@ -151,10 +146,6 @@ class GenRLHistoryEnv(gym.Wrapper):
             self.goal_stack.append(self.env.goal)
 
         self.obs_stack.append(obs)
-        if skill is None:
-            skill = info.get("skill_todo", np.zeros(1, ))
-        self.skill_stack.append(skill)
-
         self.act_stack.append(np.zeros_like(self.env.action_space.sample()))
 
         self.rew_stack.append(0)
@@ -166,7 +157,6 @@ class GenRLHistoryEnv(gym.Wrapper):
     def step(
         self,
         action: np.ndarray,
-        skill: np.ndarray = None
     ) -> Tuple[GenRLEnvOutput, SupportsFloat, bool, bool, Dict]:
         """Replaces env observation with fixed length observation history."""
         # Update applied action to the previous timestep.
@@ -180,9 +170,6 @@ class GenRLHistoryEnv(gym.Wrapper):
         self.obs_stack.append(obs)
         self.act_stack.append(
             np.zeros_like(self.env.action_space.sample()))  # Append unknown action to current timestep.
-        if skill is None:
-            skill = info.get("skill_todo", np.zeros(1, ))
-        self.skill_stack.append(skill)
         self.termination_stack.append(termination)
         self.truncation_stack.append(truncated)
         self.info_stack.append(info)

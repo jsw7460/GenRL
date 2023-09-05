@@ -1,49 +1,34 @@
 from __future__ import annotations
 
-import os
 from typing import Callable, Optional, Union, Any, List, Iterable, Tuple, Type
 
 import numpy as np
 from jax.tree_util import tree_map
 from minari import MinariDataset
-from minari.dataset.minari_storage import PathLike
+from minari.dataset.minari_storage import PathLike, MinariStorage
 
-from genrl.rl.buffers.genrl_storage import GenRLStorage
-from genrl.rl.buffers.type_aliases import GenRLBufferSample, GenRLEpisodeData
+from vlg.rl.buffers.type_aliases import VLGBufferSample, VLGEpisodeData
 
 
 class GenRLDataset(MinariDataset):
     def __init__(
         self,
-        data: Union[GenRLStorage, PathLike],
+        data: Union[MinariStorage, PathLike],
         seed: int,
-        skill_based: bool,
         episode_indices: Optional[np.ndarray] = None,
-        postprocess_fn: Optional[Callable[[dict], Any]] = None,
+        preprocess_obs: Optional[Callable[[Any], Any]] = lambda x: x,
     ):
         self.seed = seed
-        self.skill_based = skill_based
-
-        if isinstance(data, GenRLStorage):
-            self._data = data
-        elif (
-            isinstance(data, str)
-            or isinstance(data, os.PathLike)
-            or isinstance(data, bytes)
-        ):
-            self._data = GenRLStorage(data, skill_based=skill_based)
-        else:
-            raise ValueError(f"Unrecognized type {type(data)} for data")
-        super(GenRLDataset, self).__init__(data=self._data, episode_indices=episode_indices)
+        super(GenRLDataset, self).__init__(data=data, episode_indices=episode_indices)
 
         self._generator = np.random.default_rng(seed)
-        self.postprocess_fn = postprocess_fn
+        self.preprocess_obs = preprocess_obs
 
-        self.episodes = None  # type: Union[None, List[GenRLEpisodeData, ...]]
+        self.episodes = None  # type: Union[None, List[VLGEpisodeData, ...]]
         self.__use_memory_cache = False
 
     def filter_episodes(
-        self, condition: Callable[[GenRLEpisodeData], bool]
+        self, condition: Callable[[VLGEpisodeData], bool]
     ) -> GenRLDataset:
         """Filter the dataset episodes with a condition.
 
@@ -60,7 +45,7 @@ class GenRLDataset(MinariDataset):
         """
 
         def dict_to_episode_data_condition(episode: dict) -> bool:
-            return condition(GenRLEpisodeData(**episode))
+            return condition(VLGEpisodeData(**episode))
 
         mask = self._data.apply(
             dict_to_episode_data_condition, episode_indices=self._episode_indices
@@ -69,9 +54,8 @@ class GenRLDataset(MinariDataset):
         return GenRLDataset(
             self._data,
             seed=self.seed,
-            skill_based=self.skill_based,
             episode_indices=self._episode_indices[mask],
-            postprocess_fn=self.postprocess_fn
+            preprocess_obs=self.preprocess_obs
         )
 
     @classmethod
@@ -100,15 +84,14 @@ class GenRLDataset(MinariDataset):
             slice_dataset = cls(
                 data=buffer.spec.data_path,
                 seed=buffer.seed,
-                skill_based=buffer.skill_based,
                 episode_indices=indices[start_idx:end_idx],
-                postprocess_fn=buffer.postprocess_fn)
+                preprocess_obs=buffer.preprocess_obs)
             out_datasets.append(slice_dataset)
             start_idx = end_idx
 
         return tuple(out_datasets)
 
-    def sample_episodes(self, n_episodes: int) -> Iterable[GenRLEpisodeData]:
+    def sample_episodes(self, n_episodes: int) -> Iterable[VLGEpisodeData]:
         """Sample n number of episodes from the dataset.
 
         Args:
@@ -120,7 +103,7 @@ class GenRLDataset(MinariDataset):
         else:
             indices = self._generator.choice(self.episode_indices, size=n_episodes, replace=True)
             episodes = self._data.get_episodes(indices)
-            return list(map(lambda data: GenRLEpisodeData(**data), episodes))
+            return list(map(lambda data: VLGEpisodeData(**data), episodes))
 
     def cache_data(self):
         """
@@ -135,7 +118,7 @@ class GenRLDataset(MinariDataset):
         self,
         n_episodes: int,
         subseq_len: int,
-    ) -> GenRLBufferSample:
+    ) -> VLGBufferSample:
 
         episodes = self.sample_episodes(n_episodes)
 
@@ -148,15 +131,17 @@ class GenRLDataset(MinariDataset):
             end_idx = start_idx + subseq_len
             timesteps_range = np.arange(start_idx, end_idx)
 
+            ep_obs = self.preprocess_obs(ep.observations)
+
             # obs = ep.observations["observation"]
             # obs = obs[start_idx: end_idx, ...]
 
-            obs = ep.observations[start_idx: end_idx, ...]
+            obs = ep_obs[start_idx: end_idx, ...]
             act = ep.actions[start_idx: end_idx, ...]
 
             # next_obs = obs[start_idx + 1: end_idx + 1, ...]
 
-            next_obs = ep.observations[start_idx + 1: end_idx + 1, ...]
+            next_obs = ep_obs[start_idx + 1: end_idx + 1, ...]
             rew = ep.rewards[start_idx: end_idx, ...]
             terminations = ep.terminations[start_idx: end_idx, ...]
 
@@ -166,19 +151,6 @@ class GenRLDataset(MinariDataset):
             act_padding = np.zeros((pad_size, act.shape[-1]))
             rew_padding = np.zeros((pad_size,))
             terminations_padding = np.zeros((pad_size,))
-
-            if self.skill_based:
-                sk = ep.sem_skills[start_idx: end_idx, ...]
-                sk_done = ep.sem_skills_done[start_idx: end_idx, ...]
-                sk_padding = np.zeros((pad_size, sk.shape[-1]))
-                sk_done_padding = np.zeros((pad_size,), dtype=np.bool_)
-
-                sem_skills = np.concatenate((sk, sk_padding), axis=0)
-                sem_skills_done = np.concatenate((sk_done, sk_done_padding), axis=0)
-
-            else:
-                sem_skills = np.zeros(1,)
-                sem_skills_done = np.zeros(1, dtype=np.bool_)
 
             observations = np.concatenate((obs, obs_padding), axis=0)
             actions = np.concatenate((act, act_padding), axis=0)
@@ -197,11 +169,9 @@ class GenRLDataset(MinariDataset):
                 "rewards": rewards,
                 "terminations": terminations,
                 "masks": masks,
-                "sem_skills": sem_skills,
-                "sem_skills_done": sem_skills_done
             }
             out.append(subtraj_data)
 
         out = tree_map(lambda *arr: np.stack(arr, axis=0), *out)
-        out = GenRLBufferSample(**out)
+        out = VLGBufferSample(**out)
         return out

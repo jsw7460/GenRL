@@ -1,7 +1,7 @@
 target: genrl.policies.low.DiffusionLowPolicy
 
 defaults:
-    - diffusion/policy: mlp
+    - diffusion/policy: transformer
 
 kwargs:
   seed: ${seed}
