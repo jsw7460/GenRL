@@ -1,0 +1,13 @@
+target: genrl.policies.low.DecisionTransformer
+
+
+defaults:
+  - dt/policy: dt
+
+kwargs:
+  seed: ${seed}
+  cfg:
+    observation_dim: ${env.observation_dim}
+    action_dim: ${env.action_dim}
+
+    policy: ${low_policy.dt.policy}

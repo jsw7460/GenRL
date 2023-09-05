@@ -2,11 +2,12 @@ import collections.abc
 import random
 from copy import deepcopy
 from types import MappingProxyType
-from typing import Dict, Union
+from typing import Dict, Union, Tuple
 
 import jax
 import numpy as np
 import optax
+from jax import numpy as jnp
 
 from genrl.utils.common.type_aliases import GenRLPolicyInput, GenRLPolicyOutput
 from genrl.utils.jax_utils.general import get_basic_rngs
@@ -63,9 +64,13 @@ class PolicyNNWrapper:
         raise NotImplementedError()
 
     def predict(self, x: GenRLPolicyInput, *args, **kwargs) -> GenRLPolicyOutput:
+        self.rng, _ = jax.random.split(self.rng)
+        return self._predict(x, *args, **kwargs)
+
+    def _predict(self, x: GenRLPolicyInput, deterministic: bool = True, *args, **kwargs) -> GenRLPolicyOutput:
         raise NotImplementedError()
 
-    def get_init_arrays(self):
+    def get_init_arrays(self) -> Tuple[jnp.ndarray, ...]:
         raise NotImplementedError()
 
     def build(self):
@@ -77,4 +82,9 @@ class PolicyNNWrapper:
 
         tx = self.optimizer_class(learning_rate=self.cfg["lr"], **self.cfg["optimizer_kwargs"])
         self.rng, rngs = get_basic_rngs(self.rng)
-        self.policy_nn = Model.create(apply_fn=self.policy_nn.apply, params=self.policy_nn.init(rngs, *init_arr), tx=tx)
+
+        self.policy_nn = Model.create(
+            apply_fn=self.policy_nn.apply,
+            params=self.policy_nn.init(rngs, *init_arr),
+            tx=tx
+        )

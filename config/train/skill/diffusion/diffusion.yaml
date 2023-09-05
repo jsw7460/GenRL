@@ -1,0 +1,22 @@
+target: genrl.policies.skill.DiffusionSkillPolicy
+
+defaults:
+    - diffusion/policy: mlp
+
+kwargs:
+  seed: ${seed}
+  cfg:
+    observation_dim: ${env.observation_dim}
+    action_dim: ${env.action_dim}
+
+    total_denoise_steps: 50
+    noise_dim: ${env.action_dim}
+    skill_dim: 1
+
+    ddpm_schedule:
+      beta1: 1e-4
+      beta2: 0.02
+      total_denoise_steps: ${skill.kwargs.cfg.total_denoise_steps}
+      method: cosine
+
+    policy: ${skill.diffusion.policy}

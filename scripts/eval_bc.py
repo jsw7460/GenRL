@@ -1,13 +1,14 @@
 import sys
 from functools import partial
-from typing import TypeVar, Any, Tuple, SupportsFloat, Dict
-
-import numpy as np
+from typing import TypeVar
 
 sys.path.append("/home/jsw7460/diffusion_rl/")
 
 import hydra
 from omegaconf import DictConfig
+
+from genrl.rl.envs.franka_kitchen import FrankaKitchenWrapper
+from genrl.rl.envs.utils import GenRLHistoryEnv
 
 from genrl.evaluations.base import EvaluationExecutor
 from genrl.evaluations.evaluation_methods import evaluate_policy
@@ -18,31 +19,25 @@ WrapperObsType = TypeVar("WrapperObsType")
 WrapperActType = TypeVar("WrapperActType")
 
 
-class FrankaKitchenWrapper(gym.Wrapper):
-    def __init__(self, env: gym.Env):
-        super(FrankaKitchenWrapper, self).__init__(env=env)
-        self.observation_space = gym.spaces.Box(low=-np.infty, high=np.infty, shape=(59,))
-
-    def reset(
-        self, *, seed: "int | None" = None, options: "dict[str, Any] | None" = None
-    ) -> Tuple[WrapperObsType, Dict[str, Any]]:
-        obs, info = super(FrankaKitchenWrapper, self).reset(seed=seed, options=options)
-
-        obs = obs["observation"]
-        return obs, info
-
-    def step(self, action: WrapperActType) -> Tuple[WrapperObsType, SupportsFloat, bool, bool, Dict[str, Any]]:
-        obs, *_ = super(FrankaKitchenWrapper, self).step(action=action)
-        obs = obs["observation"]
-        return obs, *_
-
-
 @hydra.main(version_base=None, config_path="../config/eval", config_name="base")
 def program(cfg: DictConfig) -> None:
-    env = gym.make("FrankaKitchen-v1", max_episode_steps=30)
-    env = FrankaKitchenWrapper(env)
+    env1 = gym.make(
+        "FrankaKitchen-v1",
+        tasks_to_complete=["microwave", "kettle", "light switch"],
+        max_episode_steps=280,
+        render_mode="rgb_array"
+    )
+    env1 = GenRLHistoryEnv(FrankaKitchenWrapper(env1))
 
-    eval_executor = EvaluationExecutor(cfg, envs=[env])
+    env2 = gym.make(
+        "FrankaKitchen-v1",
+        tasks_to_complete=["kettle", "light switch", "microwave"],
+        max_episode_steps=280,
+        render_mode="rgb_array"
+    )
+    env2 = GenRLHistoryEnv(FrankaKitchenWrapper(env2))
+
+    eval_executor = EvaluationExecutor(cfg, envs=(env1, env2))
     eval_fn = partial(evaluate_policy, n_eval_episodes=1)
     eval_executor.eval_execute(eval_fn=eval_fn)
 

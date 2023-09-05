@@ -8,4 +8,9 @@ date: 2023-08-27  # yyyy-mm-dd. Date for trained model
 pretrained_suffix: ???
 step: 10000
 
+
+visual_save_prefix: /home/jsw7460/z4_shared/
+text_save_prefix: /home/jsw7460/genrl_eval/
+
 pretrained_path: ${pretrained_prefix}/${date}/cfg/cfg_${pretrained_suffix}
+render: False

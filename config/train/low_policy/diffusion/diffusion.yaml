@@ -16,5 +16,6 @@ kwargs:
       beta1: 1e-4
       beta2: 0.02
       total_denoise_steps: ${low_policy.kwargs.cfg.total_denoise_steps}
+      method: cosine
 
     policy: ${low_policy.diffusion.policy}

@@ -22,8 +22,8 @@ def create_mlp(
     activation_fn: Callable = nn.relu,
     dropout: float = 0.0,
     squash_output: bool = False,
-    layer_norm: bool = False,
-    batch_norm: bool = False,
+    layernorm: bool = False,
+    batchnorm: bool = False,
     use_bias: bool = True,
     kernel_init: Callable[[PRNGKey, Shape, Dtype], Array] = nn.initializers.xavier_normal(),
     bias_init: Callable[[PRNGKey, Shape, Dtype], Array] = nn.initializers.zeros
@@ -37,8 +37,8 @@ def create_mlp(
         activation_fn=activation_fn,
         dropout=dropout,
         squash_output=squash_output,
-        layer_norm=layer_norm,
-        batch_norm=batch_norm,
+        layer_norm=layernorm,
+        batch_norm=batchnorm,
         use_bias=use_bias,
         kernel_init=kernel_init,
         bias_init=bias_init

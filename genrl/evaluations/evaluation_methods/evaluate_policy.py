@@ -1,10 +1,10 @@
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Optional
 
 import numpy as np
 
-from genrl.rl.envs.vecenv import GenRLVecEnv
+from genrl.rl.envs.utils.vecenv import GenRLVecEnv
 from genrl.utils import interfaces
-from genrl.utils.common.type_aliases import GenRLPolicyInput
+from genrl.utils.common.type_aliases import GenRLPolicyInput, GenRLEnvEvalResult
 
 
 def evaluate_policy(
@@ -14,17 +14,15 @@ def evaluate_policy(
     deterministic: bool = True,
     render: bool = False,
     callback: Optional[Callable[[Dict[str, Any], Dict[str, Any]], None]] = None,
-    reward_threshold: Optional[float] = None,
-    return_episode_rewards: bool = False,
     warn: bool = True,
-) -> Union[Tuple[float, float], Tuple[List[float], List[int]]]:
+) -> GenRLEnvEvalResult:
     n_envs = env.num_envs
     episode_rewards = []
     episode_lengths = []
+    vis_observations = []
 
     episode_counts = np.zeros(n_envs, dtype="int")
-    # Divides episodes among different sub environments in the vector as evenly as possible
-    episode_count_targets = np.array([(n_eval_episodes + i) // n_envs for i in range(n_envs)], dtype="int")
+    episode_count_targets = np.array([n_eval_episodes for _ in range(n_envs)], dtype="int")
 
     current_rewards = np.zeros(n_envs)
     current_lengths = np.zeros(n_envs, dtype="int")
@@ -32,11 +30,11 @@ def evaluate_policy(
 
     states = None
     episode_starts = np.ones((env.num_envs,), dtype=bool)
+
     while (episode_counts < episode_count_targets).any():
-
         model_prediction = model.predict(GenRLPolicyInput.from_env_output(observations))
-
-        new_observations, rewards, dones, infos = env.step(model_prediction.pred_action)
+        action = model_prediction.pred_action
+        new_observations, rewards, dones, infos = env.step(action)
         current_rewards += rewards
         current_lengths += 1
         for i in range(n_envs):
@@ -60,13 +58,20 @@ def evaluate_policy(
         observations = new_observations
 
         if render:
-            env.render()
+            img = env.render_array()
+            img_stack = np.stack(img, axis=0)  # [n_envs, x, y, 3]
+            vis_observations.append(img_stack)
 
-    mean_reward = np.mean(episode_rewards)
-    std_reward = np.std(episode_rewards)
-    if reward_threshold is not None:
-        assert mean_reward > reward_threshold, \
-            "Mean reward below threshold: " f"{mean_reward:.2f} < {reward_threshold:.2f}"
-    if return_episode_rewards:
-        return episode_rewards, episode_lengths
-    return mean_reward, std_reward
+    if render:
+        vis_observations = np.stack(vis_observations, axis=1)  # [n_envs, ep_len, x, y, 3]
+        vis_observations = [vis_observations[i] for i in range(n_envs)]
+    else:
+        vis_observations = None
+
+    eval_result = GenRLEnvEvalResult(
+        episode_rewards=episode_rewards,
+        episode_lengths=episode_lengths,
+        vis_observations=vis_observations
+    )
+
+    return eval_result

@@ -1,0 +1,19 @@
+target: genrl.policies.skill.diffusion.nn.MLPSkillDiffusion
+
+cfg:
+  observation_dim: ${env.observation_dim}
+  action_dim: ${env.action_dim}
+  subseq_len: ${subseq_len}
+  skill_dim: ${skill.kwargs.cfg.skill_dim}
+
+  policy:
+    embed_dim: 512
+    hidden_dim: 1024
+    output_dim: ${env.action_dim}
+    dropout: ${dropout}
+    activation_fn: leaky_relu
+    total_denoise_steps: ${skill.kwargs.cfg.total_denoise_steps}
+
+  optimizer_class: adam
+  lr: 1e-4
+  optimizer_kwargs: {}

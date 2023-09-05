@@ -20,13 +20,28 @@ class BasePolicy(GenRLBaseModule, JaxSavable, Trainable):
         self.action_dim = cfg["action_dim"]
 
         self.optimizer_class = None
-        self.policy = None  # type: PolicyNNWrapper
-        self.policy_nn: Model
+        self._policy: PolicyNNWrapper = None
 
         if init_build_model:
             self.build()
 
-    def build(self):
+    @property
+    def policy(self) -> PolicyNNWrapper:
+        return self._policy
+
+    @policy.setter
+    def policy(self, policy: PolicyNNWrapper) -> None:
+        self._policy = policy
+
+    @property
+    def policy_nn(self) -> Model:
+        return self.policy.policy_nn
+
+    @policy_nn.setter
+    def policy_nn(self, nn: Model) -> None:
+        self.policy.policy_nn = nn
+
+    def build(self) -> None:
         pass
 
     def _excluded_save_params(self) -> List:
@@ -45,7 +60,7 @@ class BasePolicy(GenRLBaseModule, JaxSavable, Trainable):
     def predict(self, x: GenRLPolicyInput) -> GenRLPolicyOutput:
         return self._predict(x)
 
-    def _predict(self, *args, **kwargs) -> GenRLPolicyOutput:
+    def _predict(self, x: GenRLPolicyInput) -> GenRLPolicyOutput:
         raise NotImplementedError()
 
     def update(self, *args, **kwargs) -> Dict:

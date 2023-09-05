@@ -6,11 +6,11 @@ cfg:
   subseq_len: ${subseq_len}
 
   policy:
-    embed_dim: 64
-    hidden_dim: 32
+    embed_dim: 512
+    hidden_dim: 1024
     output_dim: ${env.action_dim}
     dropout: ${dropout}
-    activation_fn: relu
+    activation_fn: leaky_relu
     total_denoise_steps: ${low_policy.kwargs.cfg.total_denoise_steps}
 
   optimizer_class: adam

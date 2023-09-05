@@ -46,25 +46,22 @@ class BC(BaseTrainer):
         self.required_total_update = self.max_iter
 
     def _sample_train_batch(self) -> GenRLBufferSample:
-        return self.train_dataset.sample_subtrajectories(
-            self.batch_size,
-            self.subseq_len,
-            allow_replace=True
-        )
+        return self.train_dataset.sample_subtrajectories(n_episodes=self.batch_size, subseq_len=self.subseq_len)
 
     def _update_model(self, replay_data: GenRLBufferSample) -> Dict:
         info = self.low_policy.update(replay_data)
         return info
 
     def _evaluate_model(self) -> Dict[str, Any]:
-        subtraj = self.eval_dataset.sample_subtrajectories(len(self.eval_dataset), 1)
+        subtraj = self.eval_dataset.sample_subtrajectories(n_episodes=self.batch_size, subseq_len=self.subseq_len)
 
         policy_input = GenRLPolicyInput(
             observations=subtraj.observations,
             actions=subtraj.actions,
             masks=subtraj.masks,
             rewards=subtraj.rewards,
-            terminations=subtraj.terminations
+            terminations=subtraj.terminations,
+            timesteps=subtraj.timesteps_range
         )
 
         policy_output = self.low_policy.predict(policy_input)
@@ -73,8 +70,12 @@ class BC(BaseTrainer):
         policy_info = policy_output.info
 
         targ_action = subtraj.actions
+        action_dim = targ_action.shape[-1]
 
-        mse_loss = np.mean((pred_action - targ_action) ** 2, axis=-1) * subtraj.masks
+        pred_action = pred_action.reshape(-1, action_dim) * subtraj.masks.reshape(-1, 1)
+        targ_action = targ_action.reshape(-1, action_dim) * subtraj.masks.reshape(-1, 1)
+
+        mse_loss = np.mean((pred_action - targ_action) ** 2, axis=-1)
         mse_loss = np.sum(mse_loss) / np.sum(subtraj.masks)
 
         policy_info.update({"mse_loss": mse_loss})

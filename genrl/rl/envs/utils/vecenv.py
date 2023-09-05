@@ -3,7 +3,7 @@ from typing import List
 
 import numpy as np
 
-from genrl.rl.envs import GenRLHistoryEnv
+from genrl.rl.envs.utils.history import GenRLHistoryEnv
 from genrl.utils.common.type_aliases import GenRLEnvOutput
 
 OBS_IDX = 0
@@ -15,7 +15,7 @@ INFO_IDX = 4
 
 class GenRLVecEnv:
 
-    def __init__(self, envs: List[GenRLHistoryEnv]):
+    def __init__(self, envs: Tuple[GenRLHistoryEnv, ...]):
         self.envs = envs
         self.num_envs = len(envs)
 
@@ -33,3 +33,10 @@ class GenRLVecEnv:
         infos = [result[INFO_IDX] for result in results]
 
         return GenRLEnvOutput.batch_stack([result[0] for result in results]), rewards, terminations, infos
+
+    def render_array(self):
+        images = [env.render() for env in self.envs]
+        return images
+
+    def __iter__(self):
+        return iter(self.envs)

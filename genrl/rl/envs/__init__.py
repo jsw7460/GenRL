@@ -1,2 +1,2 @@
-from genrl.rl.envs.history import GenRLHistoryEnv
-from genrl.rl.envs.vecenv import GenRLVecEnv
+from genrl.rl.envs.utils.vecenv import GenRLVecEnv
+from genrl.rl.envs.utils.history import GenRLHistoryEnv

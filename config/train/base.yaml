@@ -4,15 +4,16 @@ defaults:
   - env: kitchen
   - wandb: base
   - low_policy: diffusion/diffusion
+  - skill: diffusion/diffusion
   - algo: bc
 modules: ${algo.modules}
 
 save_prefix: /home/jsw7460/mnt/genrl_save/train/
 save_suffix: foo
-batch_size: 32
-subseq_len: 5
+batch_size: 256
+subseq_len: 2
 dropout: 0.0
 max_iter: ${algo.max_iter}
 log_interval: 100
 save_interval: 10_000
-eval_interval: 300
+eval_interval: 1000
