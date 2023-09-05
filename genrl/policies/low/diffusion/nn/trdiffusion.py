@@ -50,11 +50,6 @@ class TransformerDiffusionNN(nn.Module):
             jnp.sin,
             nn.Dense(self.embed_dim)
         ])
-        # self.emb_t = nn.Sequential([
-        #     nn.Embed(self.total_denoise_steps + 1, self.embed_dim),
-        #     jnp.sin,
-        #     nn.Dense(self.embed_dim)
-        # ])
 
         self.pos_embed = nn.Sequential([
             nn.Dense(self.embed_dim),

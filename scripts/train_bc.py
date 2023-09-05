@@ -23,10 +23,7 @@ def apply_fn(ep_dict):
 # data = h5py.File("/home/jsw7460/.minari/datasets/kitchen-mixed-v1/data/main_data.hdf5")
 buffer = GenRLDataset(
     # "/home/jsw7460/.minari/datasets/kitchen-mixed-v1/data/main_data.hdf5",
-    "/home/jsw7460/Kitchen-v0",
-    777,
-    postprocess_fn=apply_fn,
-    skill_based=True
+    "/home/jsw7460/Kitchen-v0", 777, postprocess_fn=apply_fn, skill_based=True
 )
 
 buffer = buffer.filter_episodes(lambda ep: ep.total_timesteps > 30)

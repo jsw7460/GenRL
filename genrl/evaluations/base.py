@@ -1,7 +1,7 @@
 import pickle
 import random
 from pathlib import Path
-from typing import Dict, Union, Callable, Type, List, Tuple
+from typing import Dict, Union, Callable, Type, Tuple
 
 import numpy as np
 from hydra.utils import get_class
@@ -16,6 +16,7 @@ from genrl.utils.interfaces import JaxSavable
 class EvaluationExecutor:
     save_filename_base = "{env}_r{reward}"
     max_env_name = 15
+    predictable = ["skill", "low_policy"]
 
     def __init__(self, cfg: Union[Dict, DictConfig], envs: Tuple[GenRLHistoryEnv, ...]):
         random.seed(cfg.seed)
@@ -55,7 +56,8 @@ class EvaluationExecutor:
             self.pretrained_models[module] = instance
 
     def eval_execute(self, eval_fn: Callable[..., GenRLEnvEvalResult], **kwargs):
-        models = {"model": self.pretrained_models["skill"]}
+        predictable_module = self.pretrained_cfg["algo"]["modules"][0]
+        models = {"model": self.pretrained_models[predictable_module]}
         eval_result = eval_fn(**models, env=self.vectorized_env, render=self.render, **kwargs)
         rewards = eval_result.episode_rewards
         episode_lengths = eval_result.episode_lengths

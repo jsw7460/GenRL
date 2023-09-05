@@ -24,8 +24,6 @@ class GenRLDataset(MinariDataset):
         self.seed = seed
         self.skill_based = skill_based
 
-        super(GenRLDataset, self).__init__(data=data, episode_indices=episode_indices)
-
         if isinstance(data, GenRLStorage):
             self._data = data
         elif (
@@ -36,6 +34,7 @@ class GenRLDataset(MinariDataset):
             self._data = GenRLStorage(data, skill_based=skill_based)
         else:
             raise ValueError(f"Unrecognized type {type(data)} for data")
+        super(GenRLDataset, self).__init__(data=self._data, episode_indices=episode_indices)
 
         self._generator = np.random.default_rng(seed)
         self.postprocess_fn = postprocess_fn

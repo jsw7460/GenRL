@@ -98,6 +98,7 @@ for t in range(len(observations)):
             dtype=ep_skills.dtype,
             data=ep_skills
         )
+        print(ep_skills.shape)
 
         episode.create_dataset(
             name="sem_skills_done",

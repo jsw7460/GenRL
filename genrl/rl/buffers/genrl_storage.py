@@ -24,7 +24,7 @@ class GenRLStorage(MinariStorage):
             data_path (str): full path to the `main_data.hdf5` file of the dataset.
         """
         super(GenRLStorage, self).__init__(data_path)
-        self.skill_based = False
+        self.skill_based = skill_based
 
     def apply(
         self,
