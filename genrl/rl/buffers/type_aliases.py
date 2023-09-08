@@ -36,8 +36,8 @@ class GenRLBufferSample:
     """
 
     # Spec
-    episode_id: np.array  # The episode number where the subtrajectory sampled
-    timesteps_range: np.array
+    episode_ids: np.array  # The episode number where the subtrajectory sampled
+    timestep_ranges: np.array
     subseq_len: np.array
 
     # RL-Common
@@ -46,4 +46,5 @@ class GenRLBufferSample:
     next_observations: ndArray  # [b, l, d]
     rewards: ndArray  # [b, l]
     terminations: ndArray  # [b, l]
+    truncations: ndArray    # [b, l]
     masks: ndArray  # [b, l]  # Whether each component is zero padded or not
