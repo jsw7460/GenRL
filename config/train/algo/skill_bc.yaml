@@ -1,5 +1,5 @@
 mode: bc
-cls: genrl.algos.SkillBC
+cls: vlg.algos.SkillBC
 modules:
   - skill
 max_iter: 10_000_000
