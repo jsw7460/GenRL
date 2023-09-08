@@ -1,6 +1,4 @@
 import sys
-import gymnasium
-import minari
 
 sys.path.append("/home/jsw7460/diffusion_rl/")
 
@@ -14,7 +12,6 @@ from genrl.rl.buffers.genrl_buffer import GenRLDataset
 from genrl.algos import BC
 
 
-
 @hydra.main(version_base=None, config_path="../config/train", config_name="base")
 def program(cfg: DictConfig) -> None:
     cfg = OmegaConf.to_container(cfg, resolve=True)  # type: Dict
@@ -26,7 +23,6 @@ def program(cfg: DictConfig) -> None:
     train_dt.cache_data()
     print("Train dataset", len(train_dt))
     # print("Eval dataset", len(eval_dt))
-
 
     modules_dict = {}
     for module in cfg["algo"]["modules"]:

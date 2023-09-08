@@ -20,15 +20,14 @@ def preprocess_obs(obs):
 # data = h5py.File("/home/jsw7460/.minari/datasets/kitchen-mixed-v1/data/main_data.hdf5")
 
 buffer = VLGDataset(
-    "/home/jsw7460/.minari/datasets/kitchen-mixed-v1/data/main_data.hdf5",
-    # "/home/jsw7460/Kitchen-v0",
+    # "/home/jsw7460/.minari/datasets/kitchen-mixed-v1/data/main_data.hdf5",
+    "/home/jsw7460/Kitchen-v0",
     777,
-    preprocess_obs=preprocess_obs,
     skill_based=True
 )
 
 buffer = buffer.filter_episodes(lambda ep: ep.total_timesteps > 30)
-train_dt, eval_dt = GenRLDataset.split_dataset(buffer, sizes=[len(buffer) - 3, 3])
+train_dt, eval_dt = VLGDataset.split_dataset(buffer, sizes=[len(buffer) - 3, 3])
 
 train_dt.cache_data()
 eval_dt.cache_data()
