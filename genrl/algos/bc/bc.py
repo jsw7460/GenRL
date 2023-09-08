@@ -61,7 +61,7 @@ class BC(BaseTrainer):
             masks=subtraj.masks,
             rewards=subtraj.rewards,
             terminations=subtraj.terminations,
-            timesteps=subtraj.timesteps_range
+            timesteps=subtraj.timestep_ranges
         )
 
         policy_output = self.low_policy.predict(policy_input)
