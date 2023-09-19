@@ -1,7 +1,7 @@
 target: vlg.policies.skill.DiffusionSkillPolicy
 
 defaults:
-    - diffusion/policy: mlp
+    - diffusion/policy: transformer
 
 kwargs:
   seed: ${seed}

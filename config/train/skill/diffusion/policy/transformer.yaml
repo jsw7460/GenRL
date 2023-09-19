@@ -1,0 +1,30 @@
+target: vlg.policies.skill.diffusion.nn.TransformerSkillDiffusion
+
+cfg:
+  observation_dim: ${env.observation_dim}
+  action_dim: ${env.action_dim}
+  subseq_len: ${subseq_len}
+  skill_dim: ${skill.kwargs.cfg.skill_dim}
+
+  policy:
+    gpt2_config:
+      vocab_size: 1
+      n_positions: 1024
+      n_layer: 4
+      n_head: 16
+      activation_function: gelu
+      resid_pdrop: 0.0
+      embd_pdrop: 0.0
+      attn_pdrop: 0.0
+      layer_norm_epsilon: 0
+
+    embed_dim: 128
+    hidden_dim: 512
+    output_dim: ${env.action_dim}
+    dropout: ${dropout}
+    activation_fn: leaky_relu
+    total_denoise_steps: ${low_policy.kwargs.cfg.total_denoise_steps}
+
+  optimizer_class: adam
+  lr: 1e-4
+  optimizer_kwargs: {}
