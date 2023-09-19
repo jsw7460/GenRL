@@ -20,7 +20,8 @@ WrapperActType = TypeVar("WrapperActType")
 
 @hydra.main(version_base=None, config_path="../config/eval", config_name="base")
 def program(cfg: DictConfig) -> None:
-    env1 = GenRLHistoryEnv(gym.make("Hopper-v3"))
+
+    env1 = GenRLHistoryEnv(gym.make("Hopper-v3", render_mode="rgb_array"))
 
     eval_executor = EvaluationExecutor(cfg, envs=(env1,))
     eval_fn = partial(evaluate_policy, n_eval_episodes=1)
