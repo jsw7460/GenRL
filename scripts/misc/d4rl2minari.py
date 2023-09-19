@@ -86,6 +86,6 @@ f.attrs["dataset_id"] = "halfcheetah-expert-v0"
 f.attrs["env_spec"] = json.dumps(env_spec)
 f.attrs["minari_version"] = ">0.3.1"
 
-print(f.keys())
-print(f.attrs.keys())
+# print(f.keys())
+# print(f.attrs.keys())
 print(f.attrs["minari_version"])
