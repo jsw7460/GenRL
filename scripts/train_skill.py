@@ -20,7 +20,6 @@ def preprocess_obs(obs):
 # data = h5py.File("/home/jsw7460/.minari/datasets/kitchen-mixed-v1/data/main_data.hdf5")
 
 buffer = VLGDataset(
-    # "/home/jsw7460/.minari/datasets/kitchen-mixed-v1/data/main_data.hdf5",
     "/home/jsw7460/Kitchen-v0",
     777,
     skill_based=True
