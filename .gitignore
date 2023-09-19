@@ -180,6 +180,7 @@ cython_debug/
 
 ###################################
 
+LAVIS/
 Minari/
 stable-baselines3/
 vlg/
