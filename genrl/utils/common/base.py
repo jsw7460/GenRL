@@ -71,6 +71,10 @@ class PolicyNNWrapper:
         raise NotImplementedError()
 
     def get_init_arrays(self) -> Tuple[jnp.ndarray, ...]:
+        """This should be overloaded by child class.
+        The output of this method is a tuple of arrays,
+        WHOSE ORDER MUST BE MATCHED WITH THE CORRESPONDING NN_MODULE'S FORWARD FUNCTION.
+        """
         raise NotImplementedError()
 
     def build(self):

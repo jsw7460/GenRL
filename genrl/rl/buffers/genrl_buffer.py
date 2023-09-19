@@ -143,7 +143,7 @@ class GenRLDataset(MinariDataset):
         ep_sample = next(iter(episodes))
 
         # Pre-allocate numpy arrays
-        observations_batch = np.empty((n_episodes, subseq_len, ep_sample.observations.shape[-1]))
+        observations_batch = np.empty((n_episodes, subseq_len, self.preprocess_obs(ep_sample.observations).shape[-1]))
         next_observations_batch = np.empty_like(observations_batch)
         actions_batch = np.empty((n_episodes, subseq_len, ep_sample.actions.shape[-1]))
         rewards_batch = np.empty((n_episodes, subseq_len))
@@ -156,9 +156,10 @@ class GenRLDataset(MinariDataset):
         for i, (ep, start_idx) in enumerate(zip(episodes, start_idxs)):
             end_idx = start_idx + subseq_len
 
-            obs = ep.observations[start_idx: end_idx, ...]
+            obs = self.preprocess_obs(ep.observations)
+            obs = obs[start_idx: end_idx, ...]
             act = ep.actions[start_idx: end_idx, ...]
-            next_obs = ep.observations[start_idx + 1: end_idx + 1, ...]
+            next_obs = obs[start_idx + 1: end_idx + 1, ...]
             rew = ep.rewards[start_idx: end_idx, ...]
             terminations = ep.terminations[start_idx: end_idx, ...]
             truncations = ep.truncations[start_idx: end_idx, ...]

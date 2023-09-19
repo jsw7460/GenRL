@@ -45,8 +45,12 @@ class EvaluationExecutor:
 
         [env.setup(self.subseq_len) for env in envs]
         self.vectorized_env = GenRLVecEnv(envs)
+        self.vectorized_env = self.vectorize_envs(envs)
         self.pretrained_models = {}
         self._load_models()
+
+    def vectorize_envs(self, envs: Tuple[GenRLHistoryEnv]):
+        return GenRLVecEnv(envs)
 
     def _load_models(self) -> None:
         for module in self.pretrained_cfg["modules"]:

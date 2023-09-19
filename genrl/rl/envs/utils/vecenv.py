@@ -29,6 +29,7 @@ class GenRLVecEnv:
         results = [env.step(actions[idx, -1]) for idx, env in enumerate(self.envs)]
 
         rewards = np.stack([result[REW_IDX] for result in results])
+        print("Rewards", rewards)
         terminations = np.stack([result[TERMINATION_IDX] or result[TRUNCATION_IDX] for result in results])
         infos = [result[INFO_IDX] for result in results]
 

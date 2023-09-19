@@ -5,7 +5,7 @@ import jax
 from hydra.utils import get_class
 from jax import numpy as jnp
 
-from dataclasses import asdict
+from dataclasses import asdict, replace
 
 from genrl.policies.base import BasePolicy
 from genrl.policies.low.diffusion.ddpm_schedule import DiffusionBetaScheduler
@@ -27,7 +27,6 @@ class DiffusionLowPolicy(BasePolicy):
 
     def build(self) -> None:
         super(DiffusionLowPolicy, self).build()
-
         policy_cls = get_class(self.cfg["policy"]["target"])
         policy_cfg = self.cfg["policy"]["cfg"]
         policy_cfg.update({"ddpm_schedule": asdict(self.ddpm_schedule)})
@@ -114,7 +113,6 @@ class DiffusionLowPolicy(BasePolicy):
         return new_policy, info
 
     def _predict(self, x: GenRLPolicyInput) -> GenRLPolicyOutput:
-
         observation = x.observations
         batch_size = observation.shape[0]
         subseq_len = observation.shape[1]
@@ -126,24 +124,13 @@ class DiffusionLowPolicy(BasePolicy):
 
         # sample initial noise, y_T ~ Normal(0, 1)
         y_t = jax.random.normal(self.rng, shape=(batch_size, subseq_len, self.noise_dim))
-        # y_t = jnp.repeat(y_t[:, jnp.newaxis, ...], repeats=subseq_len, axis=1)  # [b, l, d]
 
         # denoising chain
         for t in range(self.total_denoise_steps, 0, -1):
             self.rng, _ = jax.random.split(self.rng)
             denoise_step = t + jnp.zeros(shape=broadcast_shape, dtype="i4")
             z = jax.random.normal(self.rng, shape=(*observation.shape[: -1], self.noise_dim)) if t > 0 else 0
-            
-            # z = jax.random.normal(self.rng, shape=(*observation.shape[: -1], self.noise_dim))
-            policy_input = GenRLPolicyInput(
-                observations=x.observations,
-                actions=y_t,
-                timesteps=x.timesteps,
-                masks=x.masks,
-                rewards=x.rewards,
-                terminations=x.terminations
-            )
-
+            policy_input = replace(x, actions=y_t)
             pred = self.policy.predict(
                 x=policy_input,
                 denoise_step=denoise_step,

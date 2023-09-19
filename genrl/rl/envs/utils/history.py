@@ -10,6 +10,7 @@ WrapperObsType = TypeVar("WrapperObsType")
 WrapperActType = TypeVar("WrapperActType")
 INFTY = 1e+13
 
+
 class GenRLHistoryEnv(gym.Wrapper):
     """
         Environment wrapper for supporting sequential model inference.
@@ -18,7 +19,7 @@ class GenRLHistoryEnv(gym.Wrapper):
     def __init__(self, env: Union[GymEnv]):
         super(GenRLHistoryEnv, self).__init__(env=env)
         self.env = env
-        self.num_stack_frames = None    # Set when setup() method is called.
+        self.num_stack_frames = None  # Set when setup() method is called.
 
         self.timestep = 0
         self.goal_stack: Optional[Deque] = None
@@ -28,7 +29,7 @@ class GenRLHistoryEnv(gym.Wrapper):
         self.termination_stack: Optional[Deque] = None
         self.truncation_stack: Optional[Deque] = None
         self.info_stack: Optional[Deque] = None
-        
+
     def setup(self, num_stack_frames: int):
         self.num_stack_frames = num_stack_frames
         self.timestep = 0
@@ -44,6 +45,9 @@ class GenRLHistoryEnv(gym.Wrapper):
 
     def __str__(self):
         return self.env.__str__()
+
+    def __repr__(self):
+        return repr(self.env)
 
     @property
     def observation_space(self):
