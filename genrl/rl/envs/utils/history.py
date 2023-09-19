@@ -142,7 +142,7 @@ class GenRLHistoryEnv(gym.Wrapper):
 
     def reset(self, *args, **kwargs) -> GenRLEnvOutput:
         """Resets env and returns new observation."""
-        obs, info = self.env.reset()
+        obs, info = self.env.reset(*args, **kwargs)
         # Create a N-1 "done" past frames.
         self.pad_current_episode(obs, self.num_stack_frames - 1)
         # Create current frame (but with placeholder actions and rewards).

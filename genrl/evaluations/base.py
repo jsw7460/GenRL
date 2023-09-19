@@ -20,6 +20,7 @@ class EvaluationExecutor:
     def __init__(self, cfg: Union[Dict, DictConfig], envs: Tuple[GenRLHistoryEnv, ...]):
         random.seed(cfg.seed)
         np.random.seed(cfg.seed)
+        self.seed = cfg.seed
 
         self.cfg = cfg
         with open(cfg.pretrained_path, "rb") as f:
@@ -44,13 +45,12 @@ class EvaluationExecutor:
             self.visual_save_path.mkdir(parents=True, exist_ok=True)
 
         [env.setup(self.subseq_len) for env in envs]
-        self.vectorized_env = GenRLVecEnv(envs)
         self.vectorized_env = self.vectorize_envs(envs)
         self.pretrained_models = {}
         self._load_models()
 
     def vectorize_envs(self, envs: Tuple[GenRLHistoryEnv]):
-        return GenRLVecEnv(envs)
+        return GenRLVecEnv(envs, seed=self.seed)
 
     def _load_models(self) -> None:
         for module in self.pretrained_cfg["modules"]:

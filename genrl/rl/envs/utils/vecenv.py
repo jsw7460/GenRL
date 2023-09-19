@@ -15,12 +15,13 @@ INFO_IDX = 4
 
 class GenRLVecEnv:
 
-    def __init__(self, envs: Tuple[GenRLHistoryEnv, ...]):
+    def __init__(self, envs: Tuple[GenRLHistoryEnv, ...], seed: int):
         self.envs = envs
         self.num_envs = len(envs)
+        self.seed = seed
 
     def reset(self, *args, **kwargs) -> GenRLEnvOutput:
-        results = [env.reset(*args, **kwargs) for env in self.envs]
+        results = [env.reset(*args, **kwargs, seed=self.seed) for env in self.envs]
         return GenRLEnvOutput.batch_stack([result for result in results])
 
     def step(self, actions: np.ndarray) -> Tuple[GenRLEnvOutput, np.ndarray, np.ndarray, List[Dict]]:
